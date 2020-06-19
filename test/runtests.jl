@@ -1,4 +1,4 @@
-using HealpixTransform
+using HealpixTransformss
 using LinearAlgebra
 using Test
 
@@ -14,7 +14,7 @@ using Test
 	[tx tx1]
 	@show norm(tx - tx1, 2)
 
-	ot = HealpixTransform.∇(tlm, sph0)
+	ot = HealpixTransforms.∇(tlm, sph0)
 
 	tqux   = randn(n_pix(sph02), 3) ./ √Ωpix(sph02)
 	@time teblm = sph02 * tqux
@@ -26,7 +26,7 @@ end
 
 @testset "CMB simulations and equatorial belt" begin
 	
-	using HealpixTransform
+	using HealpixTransforms
 	using LinearAlgebra
 	using CMBspectra
 	using Interpolations 
@@ -116,12 +116,12 @@ end
 
 	TQUvec = TEB[:]
 	
-	eqQ, θ, φ = HealpixTransform.get_eq_belt(TQUvec[:,2])
-	eqU,  = HealpixTransform.get_eq_belt(TQUvec[:,3])
-	eqT,  = HealpixTransform.get_eq_belt(T[:])
-	eqE,  = HealpixTransform.get_eq_belt(E[:])
-	eqB,  = HealpixTransform.get_eq_belt(B[:])
-	eqϕ,  = HealpixTransform.get_eq_belt(ϕ[:])
+	eqQ, θ, φ = HealpixTransforms.get_eq_belt(TQUvec[:,2])
+	eqU,  = HealpixTransforms.get_eq_belt(TQUvec[:,3])
+	eqT,  = HealpixTransforms.get_eq_belt(T[:])
+	eqE,  = HealpixTransforms.get_eq_belt(E[:])
+	eqB,  = HealpixTransforms.get_eq_belt(B[:])
+	eqϕ,  = HealpixTransforms.get_eq_belt(ϕ[:])
 
 
 	eqT |> matshow; colorbar()

@@ -1,4 +1,4 @@
-module HealpixTransform
+module HealpixTransforms
 
 using FFTW
 using LinearAlgebra

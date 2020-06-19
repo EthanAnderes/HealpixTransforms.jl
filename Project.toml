@@ -1,4 +1,4 @@
-name = "HealpixTransform"
+name = "HealpixTransforms"
 uuid = "87ff4591-92fd-4060-b5b1-4df480ce5401"
 authors = ["Ethan Anderes <anderes@ucdavis.edu> and contributors"]
 version = "0.1.0"

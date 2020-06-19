@@ -1,10 +1,10 @@
 using FFTW 
 # for some reason using I need `using FFTW` *before* `using HealpixHelper`
 # to get the equatorial belt test set to pass with mkl for FFTW
-using HealpixHelper
+using HealpixTransforms
 using Test
 using PyCall 
-const HH = HealpixHelper
+const HH = HealpixTransforms
 const hp = pyimport("healpy") 
 
 @testset "pixel count and indexing" begin

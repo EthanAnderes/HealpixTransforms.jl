@@ -1,4 +1,4 @@
-# HealpixTransform
+# HealpixTransforms
 
 Under construction ...
 
