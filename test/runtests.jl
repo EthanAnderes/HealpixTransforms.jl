@@ -33,7 +33,7 @@ end
 	using PyPlot 
 	using XFields
 
-	clTfun, clϕfun = let
+	clTfun, clEfun, clBfun, clϕfun = let
 		cld = CMBspectra.camb_cls(;
 	        lmax    = 8050, 
 	        r       = 0.1,
@@ -51,7 +51,11 @@ end
 	    )
 
 		l    = cld[:phi][:ell]
-		clT   = cld[:unlen_scalar][:Ctt] ./ cld[:unlen_scalar][:factor_on_cl_cmb] .|> XFields.nan2zero
+		clTs  = cld[:unlen_scalar][:Ctt] ./ cld[:unlen_scalar][:factor_on_cl_cmb] .|> XFields.nan2zero
+		clTt  = cld[:unlen_tensor][:Ctt] ./ cld[:unlen_tensor][:factor_on_cl_cmb] .|> XFields.nan2zero
+		clEs   = cld[:unlen_scalar][:Cee] ./ cld[:unlen_scalar][:factor_on_cl_cmb] .|> XFields.nan2zero
+		clEt   = cld[:unlen_tensor][:Cee] ./ cld[:unlen_tensor][:factor_on_cl_cmb] .|> XFields.nan2zero
+		clBt   = cld[:unlen_tensor][:Cee] ./ cld[:unlen_scalar][:factor_on_cl_cmb] .|> XFields.nan2zero
 		clϕ   = cld[:phi][:Cϕϕ] ./ cld[:phi][:factor_on_cl_phi] .|> XFields.nan2zero
 
 	    extrap = (l, Cl) -> CubicSplineInterpolation(l, Cl, extrapolation_bc = Line())
@@ -60,10 +64,12 @@ end
 	       	return l -> exp(iCl(l)) / l^4
 	    end
 
-	    clTfun = l_extrap(l[3]:l[end], clT[3:end])
+	    clTfun = l_extrap(l[3]:l[end], clTs[3:end] + clTt[3:end])
+	    clEfun = l_extrap(l[3]:l[end], clEs[3:end] + clEt[3:end])
+	    clBfun = l_extrap(l[3]:l[end], clBt[3:end])
 	    clϕfun = l_extrap(l[3]:l[end], clϕ[3:end])
 	    
-	    clTfun, clϕfun
+	    clTfun, clEfun, clBfun, clϕfun
 	end
 
 
@@ -72,34 +78,57 @@ end
 	sph02 = ℍ02(nside, iter=0)
 
 
-	CT, Cϕ = let sph0 = sph0
+	CT, CE, CB, Cϕ = let sph0 = sph0
 		l, m = lm(sph0)
 		CTlm = clTfun.(l)
+		CElm = clEfun.(l)
+		CBlm = clBfun.(l)
 		Cϕlm = clϕfun.(l)
 		CTlm[l .<= 2] .= 0
+		CElm[l .<= 2] .= 0
+		CBlm[l .<= 2] .= 0
 		Cϕlm[l .<= 2] .= 0
 
 		CT = DiagOp(Xfourier(sph0, CTlm))
+		CE = DiagOp(Xfourier(sph0, CElm))
+		CB = DiagOp(Xfourier(sph0, CBlm))
 		Cϕ = DiagOp(Xfourier(sph0, Cϕlm))
 
-		CT, Cϕ
+		CT, CE, CB, Cϕ
 	end
 
 
-	T, ϕ = let sph0 = sph0, CT = CT, Cϕ = Cϕ
-		zTx = randn(eltype_in(sph0),size_in(sph0)) ./ √Ωpix(sph0)
-		zϕx = randn(eltype_in(sph0),size_in(sph0)) ./ √Ωpix(sph0)
+	T, E, B, ϕ, TEB = let 
+		zTlm = randn(eltype_out(sph0),size_out(sph0))
+		zElm = randn(eltype_out(sph0),size_out(sph0))
+		zBlm = randn(eltype_out(sph0),size_out(sph0))
+		zϕlm = randn(eltype_out(sph0),size_out(sph0))
+		# TODO add the cross correlation ...
+		T  = √CT * Xfourier(sph0, zTlm)
+		E  = √CE * Xfourier(sph0, zElm)
+		B  = √CB * Xfourier(sph0, zBlm)
+		ϕ  = √Cϕ * Xfourier(sph0, zϕlm)
 
-		T = √CT * Xmap(sph0, zTx)
-		ϕ = √Cϕ * Xmap(sph0, zϕx)
+		TEB = Xfourier(sph02, hcat(T[!],E[!],B[!]))
 
-		T,ϕ
+		T, E, B, ϕ, TEB
 	end
 
-	eqT, θ, φ = HealpixTransform.get_eq_belt(T[:])
-	eqϕ,      = HealpixTransform.get_eq_belt(ϕ[:])
+	TQUvec = TEB[:]
+	
+	eqQ, θ, φ = HealpixTransform.get_eq_belt(TQUvec[:,2])
+	eqU,  = HealpixTransform.get_eq_belt(TQUvec[:,3])
+	eqT,  = HealpixTransform.get_eq_belt(T[:])
+	eqE,  = HealpixTransform.get_eq_belt(E[:])
+	eqB,  = HealpixTransform.get_eq_belt(B[:])
+	eqϕ,  = HealpixTransform.get_eq_belt(ϕ[:])
+
 
 	eqT |> matshow; colorbar()
+	eqE |> matshow; colorbar()
+	eqB |> matshow; colorbar()
+	eqQ |> matshow; colorbar()
+	eqU |> matshow; colorbar()
 	eqϕ |> matshow; colorbar()
 
 end
