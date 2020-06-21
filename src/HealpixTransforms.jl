@@ -3,8 +3,8 @@ module HealpixTransforms
 using FFTW
 using LinearAlgebra
 using PyCall
-using XFields: Transform
-import XFields: plan, size_in, size_out, eltype_in, eltype_out
+using XFields
+import XFields: plan, size_in, size_out, eltype_in, eltype_out, Xmap, Xfourier
 
 const module_dir  = joinpath(@__DIR__, "..") |> normpath
 const UNSEEN = -1.6375e30 
@@ -53,28 +53,27 @@ Unionℍ = Union{ℍ0, ℍ02}
 # how plan operates on the Array storage
 @inline plan(h::Unionℍ) = h
 
-function Base.:*(h::ℍ0, tx::Array{F64,1})
+function Base.:*(h::ℍ0, tx::Array{F64,1}) 
     hp  = pyimport("healpy") 
-	hp.map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{C64,1} 
+    hp.map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{C64,1}
 end
 
 function Base.:\(h::ℍ0, tlm::Array{C64,1})
-    hp  = pyimport("healpy")  
-	hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false, verbose=false)::Array{F64,1}
+    hp  = pyimport("healpy")
+    hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false, verbose=false)::Array{F64,1}
 end
 
 function Base.:*(h::ℍ02, tqux::Array{F64,2})
     hp  = pyimport("healpy") 
 	teblm = hp.map2alm(tqux', lmax=h.lmax, iter=h.iter, pol=true)
-    return Array(transpose(teblm))::Array{C64,2}
+    Array(transpose(teblm))::Array{C64,2}
 end
 
 function Base.:\(h::ℍ02, teblm::Array{C64,2})
     hp  = pyimport("healpy")  
 	tqux  = hp.alm2map(transpose(teblm), h.nside, lmax=h.lmax, pol=true, verbose=false)
-    return Array(transpose(tqux))::Array{F64,2}
+    Array(transpose(tqux))::Array{F64,2}
 end
-
 
 # Extra 
 # =====================================
