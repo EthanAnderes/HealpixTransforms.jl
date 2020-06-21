@@ -91,8 +91,9 @@ function ∇(alm::Array{C64,1}, h::ℍ0)
     ax = ot[1,:]
     ∂θ_ax = ot[2,:]
     inv_sinθ_∂φ_ax = ot[3,:]
-    return ax, ∂θ_ax, inv_sinθ_∂φ_ax
+    return ∂θ_ax, inv_sinθ_∂φ_ax, ax
 end
+
 
 
 end
