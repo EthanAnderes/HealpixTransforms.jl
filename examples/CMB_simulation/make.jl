@@ -30,7 +30,7 @@ Literate.markdown(          #src
 
 using HealpixTransforms
 using XFields
-using CMBspectra
+using Spectra
 
 using Interpolations 
 using PyPlot 
@@ -42,7 +42,7 @@ using LBblocks
 
 
 clTfun, clEfun, clBfun, clϕfun = let
-    cld = CMBspectra.camb_cls(;
+    cld = Spectra.camb_cls(;
         lmax    = 8050, 
         r       = 0.1,
         ωb      = 0.0224567, 
