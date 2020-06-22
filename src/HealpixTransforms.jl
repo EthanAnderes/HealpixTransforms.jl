@@ -12,7 +12,7 @@ const UNSEEN = -1.6375e30
 F64 = Float64
 C64 = Complex{Float64}
 
-# Transforms ℍ0{<:RN} and ℍ02{<:RN}
+# Transforms ℍ0 and ℍ02 # Can you make spin a type parameter?
 # =========================================
 export ℍ0, ℍ02
 
@@ -20,7 +20,7 @@ struct ℍ0 <: Transform{F64,1}
     nside::Int
     lmax::Int
     iter::Int 
-    function ℍ0(nside; lmax=3*nside-1, iter=0)
+    function ℍ0(nside; lmax::Int=3*nside-1, iter::Int=0)
     	new(nside, lmax, iter)
     end
 end 
