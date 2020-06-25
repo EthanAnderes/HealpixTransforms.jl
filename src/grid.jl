@@ -58,7 +58,7 @@ end
 size_eqbelt(nside) = (n_eqrings(nside), eqring_n_pix(nside)) 
 
 
-function θφ_eqbelt(nside)
+function pixfull_eqbelt(nside)
 	φ    = (rw,col) -> (π/2/nside)*(col - mod(rw, 2))
 	cosθ = (rw,col) -> 4//3 - 2(rw + nside - 1)//(3nside)   
 	θ    = (rw,col) -> acos(cosθ(rw,col))
@@ -66,7 +66,7 @@ function θφ_eqbelt(nside)
 	return θ.(1:nrw, (1:ncol)'), φ.(1:nrw, (1:ncol)')
 end
 
-function θφ_eqbelt_align(nside)
+function pix_eqbelt(nside)
 	φ    = (rw,col) -> (π/2/nside)*(col - mod(rw, 2))
 	cosθ = (rw,col) -> 4//3 - 2(rw + nside - 1)//(3nside)   
 	θ    = (rw,col) -> acos(cosθ(rw,col))
@@ -74,6 +74,43 @@ function θφ_eqbelt_align(nside)
 	return θ.(1:nrw, 1), φ.(1, (1:ncol)')
 end
 
+
+
+function eqbelt(healpix_array::Array{T,d}) where {T<:Real,d}
+	n_pix = size(healpix_array,1)
+	nside   = npix2nside(n_pix)
+
+	idx_eqb  = idx_eqbelt(nside)
+
+	ncol = eqring_n_pix(nside)
+	krng = (0:(ncol÷2))'
+	shft = cis.(.- π .* krng ./ ncol) 
+
+	array_of_healpix_maps = map(eachcol(healpix_array)) do fi
+	    fmap = fi[idx_eqb]
+	    fk = rfft(fmap,(2,))
+	    fk[2:2:end,:] .*= shft
+	    irfft(fk,size(fmap,2),(2,))
+	end
+	healpix_maps = cat(array_of_healpix_maps..., dims=(3,))
+
+	# # this only works with FFTW not MKL
+	# f = healpix_array[idx_eqb,:]
+	# fk = rfft(f,2)
+	# for i=1:d
+	# 	fk[2:2:end,:,i] .*= cis.(.- π .* krng ./ ncol) 
+	# end
+	# healpix_maps = irfft(fk,ncol,2)
+
+	#Base.Slice(Base.OneTo(1))
+	# Will this result be type stable??
+	if d == 1
+		return healpix_maps[:,:,1]
+	else
+		return healpix_maps
+	end
+
+end
 
 
 
@@ -113,44 +150,21 @@ end
 
 
 
-#%% Extract equitorial belt
+#%% Viz
 #%% -------------------------------------------------------------- 
 
 
-function get_eq_belt(healpix_array::Array{T,d}) where {T<:Real,d}
-	n_pix = size(healpix_array,1)
-	nside   = npix2nside(n_pix)
-
-	idx_eqb  = idx_eqbelt(nside)
-
-	ncol = eqring_n_pix(nside)
-	krng = (0:(ncol÷2))'
-	shft = cis.(.- π .* krng ./ ncol) 
-
-	array_of_healpix_maps = map(eachcol(healpix_array)) do fi
-	    fmap = fi[idx_eqb]
-	    fk = rfft(fmap,(2,))
-	    fk[2:2:end,:] .*= shft
-	    irfft(fk,size(fmap,2),(2,))
-	end
-	healpix_maps = cat(array_of_healpix_maps..., dims=(3,))
-
-	# # this only works with FFTW not MKL
-	# f = healpix_array[idx_eqb,:]
-	# fk = rfft(f,2)
-	# for i=1:d
-	# 	fk[2:2:end,:,i] .*= cis.(.- π .* krng ./ ncol) 
-	# end
-	# healpix_maps = irfft(fk,ncol,2)
-
-	θ, φ = θφ_eqbelt_align(nside)
-
-	#Base.Slice(Base.OneTo(1))
-	# Will this result be type stable??
-	if d == 1
-		return healpix_maps[:,:,1], θ, φ
-	else
-		return healpix_maps, θ, φ
-	end
-
+for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
+	quote 
+		function $fun(
+				hpmap; 
+				vmin=-maximum(abs.(hpmap)), 
+				vmax=maximum(abs.(hpmap)), 
+				xsize=800, 
+				title="title"
+			)
+			hp  = pyimport("healpy") 
+			hp.visufunc.$fun(hpmap,min=vmin,max=vmax,xsize=xsize,title=title)
+		end
+	end |> eval
 end

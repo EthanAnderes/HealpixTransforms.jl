@@ -1,30 +1,19 @@
-#src This file generates:        
-#src - `example.ipynb`           
-#src - `example.md`              
-#src                             
-#src Build with `julia make.jl`   
-
-
-using Literate              #src
-                            #src
-                            #src
+#src Build with 
+#src  ```
+#src  julia make.jl
+#src  jupyter nbconvert note.ipynb
+#src  ```
+using Literate                      #src
 config = Dict(                      #src
     "documenter"    => false,       #src
-    "keep_comments" => true,        #src
     "execute"       => true,        #src
     "name"          => "example",   #src
     "credit"        => false,       #src
 )                                   #src
-
-Literate.notebook(          #src
-    "make.jl",              #src
-    config=config,          #src
-)                           #src
-                            #src
-Literate.markdown(          #src
-    "make.jl",              #src
-    config=config,          #src
-)                           #src
+Literate.notebook(                  #src
+    "make.jl",                      #src
+    config=config,                  #src
+)                                   #src
 
 
 
