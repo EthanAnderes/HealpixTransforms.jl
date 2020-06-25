@@ -16,4 +16,4 @@ local
 Manifest.toml
 downloads
 *.ipynb_checkpoints
-
+*.html
