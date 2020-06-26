@@ -1,5 +1,4 @@
 
-
 npix2nside(n_pix::Int) = Int(sqrt(n_pix/12))
 
 n_pix(h::Unionℍ)  = n_pix(h.nside)
@@ -40,7 +39,6 @@ n_eqrings(nside::Int)    = 2nside - 1
 eqring_n_pix(nside::Int) = 4nside
 eqbelt_n_pix(nside::Int) = n_eqrings(nside) * eqring_n_pix(nside)
 
-
 function idx_eqbelt(nside::Int)
 	# number of pixels:
 	#   12 Nside²
@@ -74,43 +72,70 @@ function pix_eqbelt(nside)
 	return θ.(1:nrw, 1), φ.(1, (1:ncol)')
 end
 
-
-
-function eqbelt(healpix_array::Array{T,d}) where {T<:Real,d}
-	n_pix = size(healpix_array,1)
+function eqbelt(hp::Vector)
+	n_pix   = length(hp)
 	nside   = npix2nside(n_pix)
-
-	idx_eqb  = idx_eqbelt(nside)
-
-	ncol = eqring_n_pix(nside)
-	krng = (0:(ncol÷2))'
-	shft = cis.(.- π .* krng ./ ncol) 
-
-	array_of_healpix_maps = map(eachcol(healpix_array)) do fi
-	    fmap = fi[idx_eqb]
-	    fk = rfft(fmap,(2,))
-	    fk[2:2:end,:] .*= shft
-	    irfft(fk,size(fmap,2),(2,))
-	end
-	healpix_maps = cat(array_of_healpix_maps..., dims=(3,))
-
-	# # this only works with FFTW not MKL
-	# f = healpix_array[idx_eqb,:]
-	# fk = rfft(f,2)
-	# for i=1:d
-	# 	fk[2:2:end,:,i] .*= cis.(.- π .* krng ./ ncol) 
-	# end
-	# healpix_maps = irfft(fk,ncol,2)
-
-	#Base.Slice(Base.OneTo(1))
-	# Will this result be type stable??
-	if d == 1
-		return healpix_maps[:,:,1]
-	else
-		return healpix_maps
-	end
-
+	idx_eqb = idx_eqbelt(nside)
+	ncol    = eqring_n_pix(nside)
+	krng    = (0:(ncol÷2))'
+	shft    = cis.(.- π .* krng ./ ncol) 
+	eq 		= hp[idx_eqb]
+	eqk 	= rfft(eq,(2,))
+	eqk[2:2:end,:] .*= shft
+	return irfft(eqk, ncol, (2,))
 end
+
+function eqbelt_2_healpix!(hp::Vector, eq::Matrix)
+	n_pix   = length(hp)
+	nside   = npix2nside(n_pix)
+	idx_eqb = idx_eqbelt(nside)
+	ncol    = eqring_n_pix(nside)
+	krng    = (0:(ncol÷2))'
+	shft    = cis.(π .* krng ./ ncol) # reverse the shift
+	eqk     = rfft(eq,(2,))
+	eqk[2:2:end,:] .*= shft
+	hp[idx_eqb]  = irfft(eqk,ncol,(2,)) # fixme ... it would be best to not allocate here
+	hp
+end
+
+
+# TODO: removing this in favor of taking a single healpix argument
+# function eqbelt(healpix_array::Array{T,d}) where {T<:Real,d}
+# 	n_pix = size(healpix_array,1)
+# 	nside   = npix2nside(n_pix)
+
+# 	idx_eqb  = idx_eqbelt(nside)
+
+# 	ncol = eqring_n_pix(nside)
+# 	krng = (0:(ncol÷2))'
+# 	shft = cis.(.- π .* krng ./ ncol) 
+
+# 	array_of_healpix_maps = map(eachcol(healpix_array)) do fi
+# 	    fmap = fi[idx_eqb]
+# 	    fk = rfft(fmap,(2,))
+# 	    fk[2:2:end,:] .*= shft
+# 	    irfft(fk,size(fmap,2),(2,))
+# 	end
+# 	healpix_maps = cat(array_of_healpix_maps..., dims=(3,))
+
+# 	# # this only works with FFTW not MKL
+# 	# f = healpix_array[idx_eqb,:]
+# 	# fk = rfft(f,2)
+# 	# for i=1:d
+# 	# 	fk[2:2:end,:,i] .*= cis.(.- π .* krng ./ ncol) 
+# 	# end
+# 	# healpix_maps = irfft(fk,ncol,2)
+
+# 	#Base.Slice(Base.OneTo(1))
+# 	# Will this result be type stable??
+# 	if d == 1
+# 		return healpix_maps[:,:,1]
+# 	else
+# 		return healpix_maps
+# 	end
+
+# end
+
 
 
 
@@ -160,11 +185,51 @@ for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
 				hpmap; 
 				vmin=-maximum(abs.(hpmap)), 
 				vmax=maximum(abs.(hpmap)), 
-				xsize=800, 
+				sub=nothing,
+				xsize=1000, 
 				title="title"
 			)
 			hp  = pyimport("healpy") 
-			hp.visufunc.$fun(hpmap,min=vmin,max=vmax,xsize=xsize,title=title)
+			hp.visufunc.$fun(hpmap,sub=sub,min=vmin,max=vmax,xsize=xsize,title=title)
 		end
 	end |> eval
 end
+
+
+
+# Rotator
+# -------------------------------------------------------------- 
+# z == right hand rotation about vector θ==0 
+# y == right hand rotation about vector (θ,φ) = (π/2,3π/4)
+function rotate_map_ZYZ(hp_map, z1::Real, y2::Real, z3::Real)
+	hp  = pyimport("healpy") 
+	rot = hp.rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
+	rot.rotate_map_pixel(hp_map)
+end
+
+function rotate_alm_ZYZ(hp_alm, z1::Real, y2::Real, z3::Real)
+	hp  = pyimport("healpy") 
+	rot = hp.rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
+	rot.rotate_map_alms(hp_map)
+end
+
+
+# fits reader: TODO
+# -------------------------------------------------------------- 
+
+# cmbTQU_prerot  = hp.read_map(cmb_file, verbose=false, field= (0,1,2));
+
+# const one_K_in_mK = 1e+6
+# nside = 512  |> hp.nside2npix |> hp.pixelfunc.get_min_valid_nside 
+# cmb_file  = "HealpixHelper/downloads/cmbs4_06b_llcdm_f095_b23_ellmin30_map_0512_mc_0000.fits"
+# eulertype = "Y" # Z rotation, then Y, then Z 
+# deg   = false
+# Zrot, Yrot, Xrot = deg2rad.((40, -50, -40)) # clockwise rotation
+# rot = hp.rotator.Rotator(rot=(Zrot, Yrot, Xrot), eulertype=eulertype, deg=deg)
+# cmbTQU_prerot  = hp.read_map(cmb_file, verbose=false, field= (0,1,2));
+# obsp_prerot  = .!(UNSEEN .== cmbTQU_prerot[1,:])
+# obsp   = rot.rotate_map_pixel(obsp_prerot);
+# cmbTQU   = rot.rotate_map_alms(cmbTQU_prerot) .* one_K_in_mK
+# cmbT = cmbTQU[1,:] .* obsp
+# cmbQ = cmbTQU[2,:] .* obsp
+# cmbU = cmbTQU[3,:] .* obsp
