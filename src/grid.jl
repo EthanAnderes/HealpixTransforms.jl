@@ -32,9 +32,56 @@ function lm(lmax::Int)
 	return l, m 
 end
 
+
+
+# Rings 
+# -----------------------------------
+
+
+ring_region(i, nside) = 
+        i < nside               ? "north cap" :
+        nside <= i < 2nside     ? "north belt" :
+        2nside == i             ? "equator" :
+        2nside < i <= 3nside    ? "south belt" :
+        3nside < i < 4nside     ? "south cap" : error("not a valid index for input Nside")
+
+function isvalid_nside(nside::Int)
+    ex = log(2,nside)
+    return ex == Int(ex)
+end
+
+function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
+
+    @assert isvalid_nside(nside)
+
+    n_rings = 4*nside - 1
+    maxn_azimuth = 4*nside
+
+    ring_matrix  = zeros(T, n_rings, maxn_azimuth)
+
+    start_ring_index = end_ring_index = 0
+    for i = 1:n_rings
+        start_ring_index = end_ring_index + 1
+        if ring_region(i,nside)=="north cap"
+            end_ring_index  = start_ring_index + (4i-1)
+        elseif ring_region(i,nside) ∈ ("north belt", "equator", "south belt")
+            end_ring_index  = start_ring_index + (maxn_azimuth-1)
+        else
+            end_ring_index  = start_ring_index + (4*(n_rings-i+1)-1)
+        end
+        idx = start_ring_index:end_ring_index
+        cidx = 1:length(idx)
+        ring_matrix[i,cidx]  = healpix_array[idx]
+    end
+
+    ring_matrix
+end
+
+
 # Extract equitorial belt 
 # -----------------------------------
 
+# Fixme: this excludes the north cap and south cap boundary ... which technically are part of the equitorial blet
 n_eqrings(nside::Int)    = 2nside - 1
 eqring_n_pix(nside::Int) = 4nside
 eqbelt_n_pix(nside::Int) = n_eqrings(nside) * eqring_n_pix(nside)
@@ -43,7 +90,7 @@ function idx_eqbelt(nside::Int)
 	# number of pixels:
 	#   12 Nside²
 	# number of equitorial pixels:
-	#	(2 Nside - 1)*(4 Nside) == 8 Nside² - 4 Nside 
+	#	(2 Nside - 1)*(4 Nside) == 8 Nside² - 4 Nside # ... this might be (2 Nside + 1)*(4 Nside) instead
 	# number of cap pixels:
 	#	 12 Nside² - 8 Nside² + 4 Nside == 4 Nside² + 4 Nside
 	# number of north cap pixels:
