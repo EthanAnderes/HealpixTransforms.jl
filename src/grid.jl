@@ -10,8 +10,8 @@ n_rings(nside::Int) = 4nside - 1
 n_lm(h::Unionℍ) = n_lm(h.lmax)
 n_lm(lmax::Int) = lmax * (lmax + 1) ÷ 2 + lmax + 1
 
-Ωpix(h::Unionℍ) = Ωpix(h.lmax)
-Ωpix(nside::Int) = 4π / n_pix(nside)
+Ωpix(h::Unionℍ) = Ωpix(h.nside)
+Ωpix(nside::Int) = 4π / n_pix(nside) # π / (3 nside^2)
 
 function pix(h::Unionℍ)
 	θ, φ = pix(h.nside)
