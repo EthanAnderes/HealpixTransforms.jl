@@ -233,11 +233,17 @@ for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
 				vmin=-maximum(abs.(hpmap)), 
 				vmax=maximum(abs.(hpmap)), 
 				sub=nothing,
+				return_projected_map=false,
 				xsize=1000, 
 				title="title"
 			)
 			hp  = pyimport("healpy") 
-			hp.visufunc.$fun(hpmap,sub=sub,min=vmin,max=vmax,xsize=xsize,title=title)
+			hp.visufunc.$fun(
+				hpmap, sub=sub, 
+				min=vmin, max=vmax,
+				return_projected_map=return_projected_map,
+				xsize=xsize, title=title,
+			)
 		end
 	end |> eval
 end
