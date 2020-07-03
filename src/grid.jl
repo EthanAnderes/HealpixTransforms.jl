@@ -234,7 +234,8 @@ for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
 				vmax=maximum(abs.(hpmap)), 
 				sub=nothing,
 				return_projected_map=false,
-				xsize=1000, 
+				xsize=1000,
+				ysize=nothing, 
 				title="title"
 			)
 			hp  = pyimport("healpy") 
@@ -242,7 +243,7 @@ for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
 				hpmap, sub=sub, 
 				min=vmin, max=vmax,
 				return_projected_map=return_projected_map,
-				xsize=xsize, title=title,
+				xsize=xsize, ysize=ysize, title=title,
 			)
 		end
 	end |> eval
