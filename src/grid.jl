@@ -226,7 +226,7 @@ end
 #%% -------------------------------------------------------------- 
 
 
-for fun ∈ (:mollview, :cartview, :orthview, :gnomview)
+for fun ∈ (:mollview, :cartview, :azeqview)
 	quote 
 		function $fun(
 				hpmap; 
