@@ -235,7 +235,6 @@ for fun ∈ (:mollview, :cartview, :azeqview)
 				sub=nothing,
 				return_projected_map=false,
 				xsize=1000,
-				ysize=nothing, 
 				title="title"
 			)
 			hp  = pyimport("healpy") 
@@ -243,7 +242,7 @@ for fun ∈ (:mollview, :cartview, :azeqview)
 				hpmap, sub=sub, 
 				min=vmin, max=vmax,
 				return_projected_map=return_projected_map,
-				xsize=xsize, ysize=ysize, title=title,
+				xsize=xsize, title=title,
 			)
 		end
 	end |> eval
