@@ -146,6 +146,12 @@ function eqbelt_2_healpix!(hp::Vector, eq::Matrix)
 end
 
 
+function eqbelt_2_healpix(eq::Matrix{T}; nside::Int) where T<:Number
+	hpx  = zeros(T, n_pix(nside)) 
+	eqbelt_2_healpix!(hpx, eq)
+end
+
+
 # TODO: removing this in favor of taking a single healpix argument
 # function eqbelt(healpix_array::Array{T,d}) where {T<:Real,d}
 # 	n_pix = size(healpix_array,1)
