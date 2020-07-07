@@ -23,7 +23,27 @@ function pix(nside::Int)
 	return θ, φ
 end
 
+
+
+# l,m <-> index  
+# -----------------------------------
+
+index2lm(i, h::Unionℍ) = index2lm(i, h.lmax)
+
+function index2lm(i, lmax)
+	hp  = pyimport("healpy") 
+	hp.Alm.getlm(lmax, i - 1)
+end
+
+lm2index(l, m, h::Unionℍ) = lm2index(l, m, h.lmax)
+
+function lm2index(l, m, lmax)
+	hp  = pyimport("healpy")
+	hp.Alm.getidx(lmax, l, m) .+ 1
+end
+
 lm(h::Unionℍ) = lm(h.lmax)
+
 function lm(lmax::Int) 
 	nlm = n_lm(lmax)
 	i = 1:nlm 
@@ -132,17 +152,17 @@ function eqbelt(hp::Vector)
 	return irfft(eqk, ncol, (2,))
 end
 
-function eqbelt_2_healpix!(hp::Vector, eq::Matrix)
-	n_pix   = length(hp)
-	nside   = npix2nside(n_pix)
+function eqbelt_2_healpix!(hpx::Vector, eq::Matrix)
+	npix   = length(hpx)
+	nside   = npix2nside(npix)
 	idx_eqb = idx_eqbelt(nside)
 	ncol    = eqring_n_pix(nside)
 	krng    = (0:(ncol÷2))'
 	shft    = cis.(π .* krng ./ ncol) # reverse the shift
 	eqk     = rfft(eq,(2,))
 	eqk[2:2:end,:] .*= shft
-	hp[idx_eqb]  = irfft(eqk,ncol,(2,)) # fixme ... it would be best to not allocate here
-	hp
+	hpx[idx_eqb]  = irfft(eqk,ncol,(2,)) # fixme ... it would be best to not allocate here
+	hpx
 end
 
 
