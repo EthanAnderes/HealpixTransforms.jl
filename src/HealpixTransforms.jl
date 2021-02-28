@@ -77,9 +77,9 @@ end
 
 # Extra 
 # =====================================
-export n_pix, n_rings, n_lm, Ωpix, pix, lm
-
 include("grid.jl")
+
+# export n_pix, n_rings, n_lm, Ωpix, pix, lm
 
 spin0(h::ℍ02) = ℍ0(h.nside, lmax=h.lmax, iter=h.iter)
 
