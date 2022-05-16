@@ -98,6 +98,67 @@ function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
 end
 
 
+
+"""
+θ_φ_idx_4_rings(Nside::Int) -> (θ, φ, idx, Δφ, nφ) where 
+θ is a vector of the polar coordinate of each healpix ring
+φ is a vector of the azimuthal coordinate of the first pixel in each ring
+idx is the index of the first pixel in each ring
+Δφ is a vector that records azimuthal pixel spacing in each ring
+nφ is a vector that records the number of grid elements in each ring
+"""
+function θ_φ_idx_4_rings(nside::Int)
+
+	@assert isvalid_nside(nside)
+
+    n_rings      = 4*nside - 1
+    maxn_azimuth = 4*nside
+
+    vθ    = zeros(n_rings)
+    vφ    = zeros(n_rings)
+    vΔφ   = zeros(n_rings)
+    vidx  = zeros(Int, n_rings)
+    vnφ   = zeros(Int, n_rings)
+
+    start_ring_index = end_ring_index = 0
+    for i = 1:n_rings
+        start_ring_index = end_ring_index + 1
+        if ring_region(i,nside)=="north cap"
+            end_ring_index  = start_ring_index + (4i-1)
+            vθ[i] = acos(1 - i^2/nside/nside/3)
+            Δφ  = π / 2 / i # 2π / nring / 2 ... citation https://arxiv.org/pdf/astro-ph/0409513.pdf
+            s   = 1
+            nφ  = 4i
+        elseif ring_region(i,nside) ∈ ("north belt", "equator")
+            end_ring_index  = start_ring_index + (maxn_azimuth-1)
+            vθ[i] = acos(4/3 - 2i/nside/3)
+            s        = mod(i-nside+1,2)
+            Δφ       = π / 2 / nside
+            nφ       = 4nside
+        elseif ring_region(i,nside) == "south belt"
+            end_ring_index  = start_ring_index + (maxn_azimuth-1)
+            vθ[i]  = acos(-(4/3 - 2*(n_rings-i+1)/nside/3))
+            s         = mod(n_rings-i+1-nside+1,2)
+            Δφ        = π / 2 / nside
+            nφ        = 4nside
+        else
+            end_ring_index  = start_ring_index + (4*(n_rings-i+1)-1)
+            vθ[i]  = acos(-(1 - (n_rings-i+1)^2/nside/nside/3))
+            Δφ        = π / 2 / (n_rings-i+1) # 2π / nring / 2
+            s         = 1
+            nφ        = 4*(n_rings-i+1)
+        end
+        vidx[i] = start_ring_index
+        vnφ[i]  = nφ
+        vφ[i]   = Δφ * (1 - s // 2)
+        vΔφ[i]  = Δφ
+    end
+
+    vθ, vφ, vidx, vΔφ, vnφ
+end
+
+
+
 # Extract equitorial belt 
 # -----------------------------------
 
