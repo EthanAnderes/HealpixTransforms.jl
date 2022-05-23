@@ -24,7 +24,6 @@ function pix(nside::Int)
 end
 
 
-
 # l,m <-> index  
 # -----------------------------------
 
@@ -51,6 +50,98 @@ function lm(lmax::Int)
 	l = @. i - 1 - m*(2lmax + 1 - m) ÷ 2
 	return l, m 
 end
+
+
+"""
+`alm2triangle(alms) -> alms_mat` arrange the healpix alms into matrix form.
+Rows correspond to l (from 0:lmax).
+Columns correspond to m (from 0:lmax). 
+Example:
+```
+import HealpixTransforms as HT
+Nside = 2048
+lmax = 3Nside - 1
+ls, ms = HT.lm(lmax) 
+ls_mat = HT.alm2triangle(ls)
+ms_mat = HT.alm2triangle(ms)
+```
+"""
+function alm2triangle(alms::AbstractVector{T}) where T
+	hp  = pyimport("healpy")
+    lmax         = hp.sphtfunc.Alm.getlmax(length(alms))
+    alms_mat     = fill(promote(T(0),NaN32)[2], lmax+1, lmax+1)
+    start_ℓindex = end_ℓindex = 0
+    for i = 1:lmax+1
+        start_ℓindex = end_ℓindex + 1
+        end_ℓindex   = start_ℓindex + (lmax+1) - i
+        rng = start_ℓindex:end_ℓindex
+        alms_mat[end-length(rng)+1:end,i] = alms[rng]
+    end
+    return Array(alms_mat)
+end
+
+# Note: to reduce mmax, just cut the end columns of the output of 
+# alm2triangle.
+function triangle2alm(tri_alms::AbstractMatrix{T}) where T
+	hp   = pyimport("healpy")
+	lmax = size(tri_alms,1)-1
+	mmax = size(tri_alms,2)-1
+	nlms = hp.sphtfunc.Alm.getsize(lmax, mmax)
+    alms = fill(promote(T(0),NaN32)[2], nlms)
+    indx_crr = 1
+    for col = 1:mmax+1
+    	x  = tri_alms[:,col]
+    	fx = isfinite.(x)
+    	alms[indx_crr:(indx_crr - 1 + sum(fx))] = x[fx]
+    	indx_crr += sum(fx)
+    end
+    return alms
+end
+
+
+#= test ...
+import HealpixTransforms as HT
+
+hp   = pyimport("healpy")
+
+Nside = 2048
+lmax  = 3*(Nside)+1
+l     = 0:lmax
+
+l_mmax2, m_mmax2 = let
+	mmax  = 2
+	nlms  = HP.sphtfunc.Alm.getsize(lmax, mmax)
+    ls = zeros(Int, nlms)
+    ms = zeros(Int, nlms)
+    for i in 1:nlms
+        l4i, m4i = hp.sphtfunc.Alm.getlm(lmax, i-1)
+        ls[i] = l4i
+        ms[i] = m4i
+    end
+    ls, ms 
+end
+
+l, m = let
+	mmax  = lmax
+	nlms  = HP.sphtfunc.Alm.getsize(lmax, mmax)
+    ls = zeros(Int, nlms)
+    ms = zeros(Int, nlms)
+    for i in 1:nlms
+        l4i, m4i = hp.sphtfunc.Alm.getlm(lmax, i-1)
+        ls[i] = l4i
+        ms[i] = m4i
+    end
+    ls, ms 
+end
+
+lmat = HT.alm2triangle(l)
+l′ = HT.triangle2alm(lmat)
+l_mmax2′ = HT.triangle2alm(lmat[:,1:3])
+
+sum(abs2, l′ .- l)
+sum(abs2, l_mmax2′ .- l_mmax2)
+
+=# 
 
 
 

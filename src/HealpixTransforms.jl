@@ -20,8 +20,17 @@ struct ℍ0 <: Transform{F64,1}
     nside::Int
     lmax::Int
     iter::Int 
-    function ℍ0(nside; lmax::Int=3*nside-1, iter::Int=0)
+    function ℍ0(nside; lmax::Int=3*nside-1, iter::Int=3)
     	new(nside, lmax, iter)
+    end
+end 
+
+struct ℍ2 <: Transform{F64,2}
+    nside::Int
+    lmax::Int
+    iter::Int 
+    function ℍ2(nside; lmax=3*nside-1, iter::Int=3)
+        new(nside, lmax, iter)
     end
 end 
 
@@ -29,23 +38,27 @@ struct ℍ02 <: Transform{F64,2}
     nside::Int
     lmax::Int
     iter::Int 
-	function ℍ02(nside; lmax=3*nside-1, iter=0)
+	function ℍ02(nside; lmax=3*nside-1, iter::Int=3)
 		new(nside, lmax, iter)
     end
 end 
 
-Unionℍ = Union{ℍ0, ℍ02}
+Unionℍ = Union{ℍ0, ℍ2, ℍ02}
 
 @inline size_in(h::ℍ0)  = (n_pix(h),)
+@inline size_in(h::ℍ2)  = (n_pix(h),2) # QU
 @inline size_in(h::ℍ02) = (n_pix(h),3) # TQU
 
-@inline size_out(h::ℍ0)  = (n_lm(h),)
-@inline size_out(h::ℍ02) = (n_lm(h),3) #TEB
+@inline size_out(h::ℍ0)  = (n_lm(h),)  
+@inline size_out(h::ℍ2)  = (n_lm(h),2) # EB
+@inline size_out(h::ℍ02) = (n_lm(h),3) # TEB
 
 @inline eltype_in(h::ℍ0)  = F64
+@inline eltype_in(h::ℍ2)  = F64
 @inline eltype_in(h::ℍ02) = F64
 
 @inline eltype_out(h::ℍ0)  = C64
+@inline eltype_out(h::ℍ2)  = C64
 @inline eltype_out(h::ℍ02) = C64
 
 # There is nothing to pre-process for healpix transform.
@@ -53,6 +66,7 @@ Unionℍ = Union{ℍ0, ℍ02}
 # how plan operates on the Array storage
 @inline plan(h::Unionℍ) = h
 
+# ℍ0
 function Base.:*(h::ℍ0, tx::Array{F64,1}) 
     hp  = pyimport("healpy") 
     hp.map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{C64,1}
@@ -62,6 +76,23 @@ function Base.:\(h::ℍ0, tlm::Array{C64,1})
     hp  = pyimport("healpy")
     hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false, verbose=false)::Array{F64,1}
 end
+
+# ℍ2
+
+function Base.:*(h::ℍ2, qux::Array{F64,2})::Array{C64,2}
+    hp  = pyimport("healpy") 
+    elm, blm = hp.map2alm_spin((qux[:,1], qux[:,2]), 2, lmax=h.lmax)
+    hcat(elm, blm)
+end
+
+function Base.:\(h::ℍ2, eblm::Array{C64,2})::Array{F64,2}
+    hp  = pyimport("healpy")
+    mmax = h.lmax
+    qx, ux = hp.sphtfunc.alm2map_spin((eblm[:,1], eblm[:,2]), h.nside, 2, h.lmax, mmax)
+    hcat(qx, ux)
+end
+
+# ℍ02
 
 function Base.:*(h::ℍ02, tqux::Array{F64,2})
     hp  = pyimport("healpy") 
