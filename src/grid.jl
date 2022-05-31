@@ -223,13 +223,15 @@ function θ_φ_idx_4_rings(nside::Int)
         elseif ring_region(i,nside) ∈ ("north belt", "equator")
             end_ring_index  = start_ring_index + (maxn_azimuth-1)
             vθ[i] = acos(4/3 - 2i/nside/3)
-            s        = mod(i-nside+1,2)
+            ## s        = mod(i-nside+1,2)
+            s        = mod(i-nside,2) + 1 # from Erratum
             Δφ       = π / 2 / nside
             nφ       = 4nside
         elseif ring_region(i,nside) == "south belt"
             end_ring_index  = start_ring_index + (maxn_azimuth-1)
             vθ[i]  = acos(-(4/3 - 2*(n_rings-i+1)/nside/3))
-            s         = mod(n_rings-i+1-nside+1,2)
+            ## s         = mod(n_rings-i+1-nside+1,2)
+            s         = mod(n_rings-i+1-nside,2) + 1  # from Erratum
             Δφ        = π / 2 / nside
             nφ        = 4nside
         else
