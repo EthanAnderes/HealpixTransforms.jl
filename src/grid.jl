@@ -17,11 +17,48 @@ function pix(h::Unionℍ)
 	θ, φ = pix(h.nside)
 	return θ, φ
 end
-function pix(nside::Int)
+function pix(Nside::Int; T=Float32)
+	θ_col, φ_col, idx_col, Δφ_col, nφ_col = θ_φ_idx_4_rings(Nside)
+	n_col = length(θ_col)
+
+	npx = n_pix(Nside)
+	θ = zeros(T,npx)
+	φ = zeros(T,npx)
+
+	for  i_col in 1:length(idx_col)
+		i_px      = idx_col[i_col]
+		if i_col == length(idx_col)
+			i_next_px = npx
+		else  
+			i_next_px = idx_col[i_col+1]
+		end
+		n_ring = length(i_px:i_next_px)
+		
+		θ[i_px:i_next_px] .= θ_col[i_col] 
+		φ[i_px:i_next_px] .= φ_col[i_col] .+  Δφ_col[i_col] .* (0:n_ring-1)
+	end
+
+	return θ, φ
+end
+#=
+using HealpixTransforms 
+using HealpixTransforms: θ_φ_idx_4_rings, n_pix
+using PyCall
+
+function pix_test(nside::Int)
 	hp  = pyimport("healpy") 
 	θ, φ  = hp.pix2ang(nside, 0:(n_pix(nside)-1))
 	return θ, φ
 end
+
+Nside = 2048
+
+@time θ_orig, φ_orig = pix_test(Nside);
+@time θ_new, φ_new   = pix(Nside);
+
+θ_new ≈ θ_orig
+φ_new ≈ φ_orig
+=#
 
 
 # l,m <-> index  
