@@ -5,6 +5,7 @@ using LinearAlgebra
 using PyCall
 using XFields
 import XFields: plan, size_in, size_out, eltype_in, eltype_out, Xmap, Xfourier
+import LinearAlgebra: \, *
 
 const module_dir  = joinpath(@__DIR__, "..") |> normpath
 const UNSEEN = -1.6375e30 
@@ -67,25 +68,25 @@ Unionℍ = Union{ℍ0, ℍ2, ℍ02}
 @inline plan(h::Unionℍ) = h
 
 # ℍ0
-function Base.:*(h::ℍ0, tx::Array{F64,1}) 
+function *(h::ℍ0, tx::Array{F64,1}) 
     hp  = pyimport("healpy") 
     hp.map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{C64,1}
 end
 
-function Base.:\(h::ℍ0, tlm::Array{C64,1})
+function \(h::ℍ0, tlm::Array{C64,1})
     hp  = pyimport("healpy")
-    hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false, verbose=false)::Array{F64,1}
+    hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false)::Array{F64,1}
 end
 
 # ℍ2
 
-function Base.:*(h::ℍ2, qux::Array{F64,2})::Array{C64,2}
+function *(h::ℍ2, qux::Array{F64,2})::Array{C64,2}
     hp  = pyimport("healpy") 
     elm, blm = hp.map2alm_spin((qux[:,1], qux[:,2]), 2, lmax=h.lmax)
     hcat(elm, blm)
 end
 
-function Base.:\(h::ℍ2, eblm::Array{C64,2})::Array{F64,2}
+function \(h::ℍ2, eblm::Array{C64,2})::Array{F64,2}
     hp  = pyimport("healpy")
     mmax = h.lmax
     qx, ux = hp.sphtfunc.alm2map_spin((eblm[:,1], eblm[:,2]), h.nside, 2, h.lmax, mmax)
@@ -94,15 +95,15 @@ end
 
 # ℍ02
 
-function Base.:*(h::ℍ02, tqux::Array{F64,2})
+function *(h::ℍ02, tqux::Array{F64,2})
     hp  = pyimport("healpy") 
 	teblm = hp.map2alm(tqux', lmax=h.lmax, iter=h.iter, pol=true)
     Array(transpose(teblm))::Array{C64,2}
 end
 
-function Base.:\(h::ℍ02, teblm::Array{C64,2})
+function \(h::ℍ02, teblm::Array{C64,2})
     hp  = pyimport("healpy")  
-	tqux  = hp.alm2map(transpose(teblm), h.nside, lmax=h.lmax, pol=true, verbose=false)
+	tqux  = hp.alm2map(transpose(teblm), h.nside, lmax=h.lmax, pol=true)
     Array(transpose(tqux))::Array{F64,2}
 end
 
