@@ -10,14 +10,14 @@ n_rings(nside::Int) = 4nside - 1
 n_lm(h::Unionℍ) = n_lm(h.lmax)
 n_lm(lmax::Int) = lmax * (lmax + 1) ÷ 2 + lmax + 1
 
-Ωpix(h::Unionℍ) = Ωpix(h.nside)
-Ωpix(nside::Int) = 4π / n_pix(nside) # π / (3 nside^2)
+Ωpix(h::Unionℍ{T}) where {T} = Ωpix(h.nside;T)
+Ωpix(nside::Int;T=Float32) = T(4π / n_pix(nside)) # π / (3 nside^2)
 
-function pix(h::Unionℍ)
-	θ, φ = pix(h.nside)
+function pix(h::Unionℍ{T}) where {T}
+	θ, φ = pix(h.nside; T)
 	return θ, φ
 end
-function pix(Nside::Int; T=Float32)
+function pix(Nside::Int;T=Float32)
 	θ_col, φ_col, idx_col, Δφ_col, nφ_col = θ_φ_idx_4_rings(Nside)
 	n_col = length(θ_col)
 
@@ -235,16 +235,16 @@ idx is the index of the first pixel in each ring
 Δφ is a vector that records azimuthal pixel spacing in each ring
 nφ is a vector that records the number of grid elements in each ring
 """
-function θ_φ_idx_4_rings(nside::Int)
+function θ_φ_idx_4_rings(nside::Int;T=Float32)
 
 	@assert isvalid_nside(nside)
 
     n_rings      = 4*nside - 1
     maxn_azimuth = 4*nside
 
-    vθ    = zeros(n_rings)
-    vφ    = zeros(n_rings)
-    vΔφ   = zeros(n_rings)
+    vθ    = zeros(T, n_rings)
+    vφ    = zeros(T, n_rings)
+    vΔφ   = zeros(T, n_rings)
     vidx  = zeros(Int, n_rings)
     vnφ   = zeros(Int, n_rings)
 
@@ -287,7 +287,7 @@ function θ_φ_idx_4_rings(nside::Int)
     vθ, vφ, vidx, vΔφ, vnφ
 end
 
-
+θ_φ_idx_4_rings(h::Unionℍ{T}) where {T} = θ_φ_idx_4_rings(h.nside; T)
 
 # Extract equitorial belt 
 # -----------------------------------
