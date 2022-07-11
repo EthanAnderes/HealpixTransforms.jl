@@ -198,14 +198,15 @@ function isvalid_nside(nside::Int)
     return ex == Int(ex)
 end
 
-function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
+
+function split_rings(healpix_array::Vector{T}, nside::Int) where T<:Number
 
     @assert isvalid_nside(nside)
 
     n_rings = 4*nside - 1
     maxn_azimuth = 4*nside
 
-    ring_matrix  = zeros(T, n_rings, maxn_azimuth)
+    ring_vector = Vector{T}[]
 
     start_ring_index = end_ring_index = 0
     for i = 1:n_rings
@@ -218,12 +219,60 @@ function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
             end_ring_index  = start_ring_index + (4*(n_rings-i+1)-1)
         end
         idx = start_ring_index:end_ring_index
-        cidx = 1:length(idx)
-        ring_matrix[i,cidx]  = healpix_array[idx]
+        push!(ring_vector, healpix_array[idx])
+    end
+
+    ring_vector
+end
+
+
+
+function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
+
+    @assert isvalid_nside(nside)
+
+    n_rings = 4*nside - 1
+    maxn_azimuth = 4*nside
+
+    ring_matrix  = zeros(T, n_rings, maxn_azimuth)
+
+    vector_of_rings = split_rings(healpix_array, nside)
+    for i = 1:n_rings
+        ring_i = vector_of_rings[i]
+        cidx = 1:length(ring_i)
+        ring_matrix[i,cidx]  = ring_i
     end
 
     ring_matrix
 end
+
+
+# function rings2rows(healpix_array::Vector{T}, nside::Int) where T<:Number
+
+#     @assert isvalid_nside(nside)
+
+#     n_rings = 4*nside - 1
+#     maxn_azimuth = 4*nside
+
+#     ring_matrix  = zeros(T, n_rings, maxn_azimuth)
+
+#     start_ring_index = end_ring_index = 0
+#     for i = 1:n_rings
+#         start_ring_index = end_ring_index + 1
+#         if ring_region(i,nside)=="north cap"
+#             end_ring_index  = start_ring_index + (4i-1)
+#         elseif ring_region(i,nside) ∈ ("north belt", "equator", "south belt")
+#             end_ring_index  = start_ring_index + (maxn_azimuth-1)
+#         else
+#             end_ring_index  = start_ring_index + (4*(n_rings-i+1)-1)
+#         end
+#         idx = start_ring_index:end_ring_index
+#         cidx = 1:length(idx)
+#         ring_matrix[i,cidx]  = healpix_array[idx]
+#     end
+
+#     ring_matrix
+# end
 
 
 
