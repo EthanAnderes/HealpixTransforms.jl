@@ -15,7 +15,7 @@ C64 = Complex{Float64}
 
 # Transforms ℍ0 and ℍ02 # Can you make spin a type parameter?
 # =========================================
-export ℍ0, ℍ02
+export ℍ0, ℍ2, ℍ02
 
 struct ℍ0{T<:Real} <: Transform{T,1}
     nside::Int
