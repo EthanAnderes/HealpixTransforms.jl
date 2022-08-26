@@ -17,7 +17,7 @@ C64 = Complex{Float64}
 # =========================================
 export ℍ0, ℍ2, ℍ02
 
-struct ℍ0{T<:Real} <: Transform{T,1}
+struct ℍ0{T<:Real} <: Transform
     nside::Int
     lmax::Int
     iter::Int 
@@ -30,7 +30,7 @@ struct ℍ0{T<:Real} <: Transform{T,1}
 
 end 
 
-struct ℍ2{T<:Real} <: Transform{T,2}
+struct ℍ2{T<:Real} <: Transform
     nside::Int
     lmax::Int
     iter::Int 
@@ -42,7 +42,7 @@ struct ℍ2{T<:Real} <: Transform{T,2}
     end
 end 
 
-struct ℍ02{T<:Real} <: Transform{T,2}
+struct ℍ02{T<:Real} <: Transform
     nside::Int
     lmax::Int
     iter::Int 
