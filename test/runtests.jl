@@ -5,8 +5,8 @@ using Test
 @testset "Basic test transforming pixel white noise" begin
 	
 	nside = 1024 # 2048
-	sph0  = ℍ0(nside, iter=0)
-	sph02 = ℍ02(nside, iter=0)
+	sph0  = ℍ0(nside)
+	sph02 = ℍ02(nside)
 
 	tx    = randn(n_pix(sph0)) ./ √Ωpix(sph0)
 	@time tlm = sph0 * tx

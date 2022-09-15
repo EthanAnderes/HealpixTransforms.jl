@@ -117,11 +117,7 @@ function \(h::ℍ02{T}, teblm::Array{Complex{T},2}) where {T<:Real}
     Array(transpose(tqux))::Array{T,2}
 end
 
-# Extra 
-# =====================================
-include("grid.jl")
-
-# export n_pix, n_rings, n_lm, Ωpix, pix, lm
+# conveniet methods
 
 spin0(h::Unionℍ{T})  where {T}  = ℍ0{T}(h.nside, lmax=h.lmax, iter=h.iter)
 spin2(h::Unionℍ{T})  where {T}  = ℍ2{T}(h.nside, lmax=h.lmax, iter=h.iter)
@@ -136,6 +132,9 @@ function ∇(alm::Array{Complex{T},1}, h::ℍ0{T}) where {T<:Real}
     return ∂θ_ax, inv_sinθ_∂φ_ax, ax
 end
 
-
+# Extras
+# =====================================
+include("grid.jl")
+include("pixels.jl")
 
 end

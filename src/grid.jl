@@ -284,7 +284,7 @@ idx is the index of the first pixel in each ring
 Δφ is a vector that records azimuthal pixel spacing in each ring
 nφ is a vector that records the number of grid elements in each ring
 """
-function θ_φ_idx_4_rings(nside::Int;T=Float32)
+function θ_φ_idx_4_rings(nside::Int; T=Float64)
 
 	@assert isvalid_nside(nside)
 
@@ -412,50 +412,11 @@ function eqbelt_2_healpix(eq::Matrix{T}; nside::Int) where T<:Number
 end
 
 
-# TODO: removing this in favor of taking a single healpix argument
-# function eqbelt(healpix_array::Array{T,d}) where {T<:Real,d}
-# 	n_pix = size(healpix_array,1)
-# 	nside   = npix2nside(n_pix)
-
-# 	idx_eqb  = idx_eqbelt(nside)
-
-# 	ncol = eqring_n_pix(nside)
-# 	krng = (0:(ncol÷2))'
-# 	shft = cis.(.- π .* krng ./ ncol) 
-
-# 	array_of_healpix_maps = map(eachcol(healpix_array)) do fi
-# 	    fmap = fi[idx_eqb]
-# 	    fk = rfft(fmap,(2,))
-# 	    fk[2:2:end,:] .*= shft
-# 	    irfft(fk,size(fmap,2),(2,))
-# 	end
-# 	healpix_maps = cat(array_of_healpix_maps..., dims=(3,))
-
-# 	# # this only works with FFTW not MKL
-# 	# f = healpix_array[idx_eqb,:]
-# 	# fk = rfft(f,2)
-# 	# for i=1:d
-# 	# 	fk[2:2:end,:,i] .*= cis.(.- π .* krng ./ ncol) 
-# 	# end
-# 	# healpix_maps = irfft(fk,ncol,2)
-
-# 	#Base.Slice(Base.OneTo(1))
-# 	# Will this result be type stable??
-# 	if d == 1
-# 		return healpix_maps[:,:,1]
-# 	else
-# 		return healpix_maps
-# 	end
-
-# end
 
 
-
-
-
-#%% Spherical coordinate helpers
-#%% -------------------------------------------------------------- 
-#%% Polar angle $\theta \in [0,\pi]$, Azmuth angle $\varphi \in [0,2\pi]$. 
+## Spherical coordinate helpers
+## -------------------------------------------------------------- 
+## Polar angle $\theta \in [0,\pi]$, Azmuth angle $\varphi \in [0,2\pi]$. 
 
 
 function n̂(θ,φ)
@@ -488,8 +449,8 @@ end
 
 
 
-#%% Viz
-#%% -------------------------------------------------------------- 
+## Viz
+## -------------------------------------------------------------- 
 
 
 for fun ∈ (:mollview, :cartview, :azeqview)
