@@ -20,24 +20,35 @@ using PyPlot
 
 eaz0, region, θspan, φspan = @sblock let 
 
-    ## --- set φ grid parameters: φspan and nφ
-    φspan = deg2rad.((-180, 180)) 
-    nφ    = 4096 # 18000
+    ###### set φ grid parameters: φspan and nφ
+    
+    ## --- option
+    # φspan = deg2rad.((-180, 180)) 
+    # nφ    = 4096 # 18000
+    ## --- option
+    Nside = 2048*2
+    φspan = (-π/3, π/3) # deg2rad.((-60,60))
+    nφ    = 4 * (Nside-2) ÷ 4 # note 4(Nside-2) == 2^3 * 3^2 * 5 * 7
+    ## --- 
 
-    ## --- set θ grid parameter: θ
+
+    ###### set θ grid parameter: θ
+    
     θspan, region  = (0.005, 0.785), :north_cap
     # θspan, region  = (0.785, 1.57) , :north_eq
     # θspan, region  = (1.57, 2.356) , :south_eq
     # θspan, region  = (2.356, 3.14), :south_cap
+
     ## --- option 1: healpix elevations
-    # Nside    = 2048*2
-    # θfull    = HT.θ_φ_idx_4_rings(Nside)[1]
-    # ri_start = findmin(@. abs2(θfull - θspan[1]))[end]
-    # ri_end   = findmin(@. abs2(θfull - θspan[2]))[end]
-    # θ        = θfull[ri_start:ri_end]
+    Nside    = 2048*2
+    θfull    = HT.θ_φ_idx_4_rings(Nside)[1]
+    ri_start = findmin(@. abs2(θfull - θspan[1]))[end]
+    ri_end   = findmin(@. abs2(θfull - θspan[2]))[end]
+    θ        = θfull[ri_start:ri_end]
     ## --- option 2: equiangle elevations
-    nθ     = 4000
-    θ = range(θspan[1], θspan[2], nθ)
+    # nθ     = 4000
+    # θ = range(θspan[1], θspan[2], nθ)
+    ## --- 
 
     return EAZ0{Float64}(θ, φspan, nφ), region, θspan, φspan
 end
@@ -47,12 +58,12 @@ end
 θ_center, θ_north, θ_south, Δφ_center = @sblock let region, θspan, φspan
 
     # ---- set parameters of the pixel
-    Nside  = 64 # 128 # 256 # 512
+    Nside  = 64 # 64 # 128 # 256 # 512
     
     #  ---- specify within region dec
     # i.e. inside = 0.01 * Nside -> close to northern boundary of region
     # i.e. inside = 0.99 * Nside -> close to southern boundary of region
-    inside = 0.1 * Nside # must be less than Nside (withing region location)
+    inside = 0.5 * Nside # must be less than Nside (withing region location)
 
     # -----
     jrgn =  (region==:north_cap) ? 0 :
@@ -71,7 +82,8 @@ end
 
 pix_field = HT.pixel.(
     EZ.θ(eaz0), EZ.φ(eaz0)';
-    φ_center = 0, 
+    φ_center = 0,
+    Δφ_center, 
     θ_center,
     θ_north, 
     θ_south,
@@ -83,23 +95,46 @@ map_plot(pix_field;  title1="Healpix pixel", vmin=-1, vmax=1)
 
 #------
 # Here we plot the pixel boundaries
+# enter θ_center (doesn't need to be on a ring)
+# and Nside.
+
+θ_center = acos(0.99) # acos(0) # acos(2/3)  # acos(-2/3) # 3.0
+Nside    = 128
+
+# don't change φ_center ... need to always be set to π/4
+# for this test since the following plot doesn't shift to π/4
+φ_center =  π/4 
+
+θ_north, θ_south, φ_left, φ_right = @sblock let θ_center, φ_center, Nside
+
+    θhpx, φhpx, idxhpx, Δφhpx, nφhpx = HT.θ_φ_idx_4_rings(Nside)
+    
+    ic = findfirst(θhpx .> θ_center) # index of the nearest ring to θ₁
+    
+    Δθ_north  = abs(θhpx[ic] - θhpx[ic-1])
+    Δθ_south  = abs(θhpx[ic+1] - θhpx[ic])
+    θ_north  = θ_center - Δθ_north 
+    θ_south  = θ_center + Δθ_south
+
+    Δφ_center = Δφhpx[ic]
+    φ_left    = φ_center - Δφ_center/2
+    φ_right   = φ_center + Δφ_center/2
+
+
+    return θ_north, θ_south, φ_left, φ_right
+end
 
 figure()
+φs = range(φ_left, φ_right, 1000)
+plot(φs, HT.zp.(φs, θ_north), ":")
+plot(φs, HT.zp.(φs, θ_south), ":")
+plot(φs, HT.zm.(φs, θ_north), "-")
+plot(φs, HT.zm.(φs, θ_south), "--")
 
-φ_center = π/4
-φ_left    = π/4 - Δφ_center/2
-φ_right   = π/4 + Δφ_center/2
-φs = range(φ_center - Δφ_center/2, φ_center + Δφ_center/2, 1000)
-
-plot(φs, acos.(HT.zp.(φs, θ_north)), ":")
-plot(φs, acos.(HT.zp.(φs, θ_south)), ":")
-plot(φs, acos.(HT.zm.(φs, θ_north)), "-")
-plot(φs, acos.(HT.zm.(φs, θ_south)), "--")
-
-plot(φ_left,   θ_center, "*")
-plot(φ_center, θ_north, "o")
-plot(φ_center, θ_south, "x")
-plot(φ_right,  θ_center, "*")
+plot(φ_left,   cos(θ_center), "*")
+plot(φ_center, cos(θ_north), "o")
+plot(φ_center, cos(θ_south), "x")
+plot(φ_right,  cos(θ_center), "*")
 
 #------
 # compare with the formulas given in the healpix paper

@@ -35,15 +35,18 @@ function pixel(
     	θ_center,
     	θ_north, 
     	θ_south,
-    	φ_center 
+    	φ_center, 
+        Δφ_center, # strickly not necessary but makes things easier 
 	)
 
-    φsft = mod(φ - φ_center + π/4, 2π)
-    if (φsft ≥ π/2) | (φsft ≤ 0)
+    if abs(asin(sin(φ - φ_center))) ≥ Δφ_center/2 
+        # if  angle separation btwn φ and φ_center is 
+        # greater than  Δφ_center/2
         return false
     elseif (θ < θ_north) | (θ > θ_south)
         return false
     else
+        φsft = mod(φ - φ_center + π/4, 2π)
         zp₀  = zp(φsft, θ_north)  
         zp₁  = zp(φsft, θ_south)
         zm₀  = zm(φsft, θ_north)  
