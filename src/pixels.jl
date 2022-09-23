@@ -39,7 +39,7 @@ function pixel(
         Δφ_center, # strickly not necessary but makes things easier 
 	)
 
-    if abs(asin(sin(φ - φ_center))) ≥ Δφ_center/2 
+    if angle_separation(φ - φ_center) ≥ Δφ_center/2 
         # if  angle separation btwn φ and φ_center is 
         # greater than  Δφ_center/2
         return false
@@ -60,6 +60,16 @@ function pixel(
 end
 
 # Helper functions
+
+
+# This formula for angle_separation is the geodesic formula simplified 
+# for two points (θ₁, φ₁) & (θ₂, φ₂) on the sphere at the equator
+# where Δφ = φ₂ - φ₁, θ₁ = θ₂ = π/2
+# 
+# copied from CirculantCov.jl
+#
+angle_separation(Δφ)  = 2asin(abs(sin(Δφ/2)))
+
 
 zp_Cap(φ, θₒ) = 1 - (1-cos(θₒ)) * (π/4/φ)^2 
 zm_Cap(φ, θₒ) = 1 - (1-cos(θₒ)) * (π/4/(π/2 - φ))^2 
