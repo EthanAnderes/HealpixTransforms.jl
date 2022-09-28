@@ -39,9 +39,7 @@ function pixel(
         Δφ_center, # strickly not necessary but makes things easier 
 	)
 
-    if angle_separation(φ - φ_center) ≥ Δφ_center/2 
-        # if  angle separation btwn φ and φ_center is 
-        # greater than  Δφ_center/2
+    if angle_separation(φ - φ_center) ≥ Δφ_center 
         return false
     elseif (θ < θ_north) | (θ > θ_south)
         return false
