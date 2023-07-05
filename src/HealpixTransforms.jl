@@ -3,6 +3,7 @@ module HealpixTransforms
 using FFTW
 using LinearAlgebra
 using PyCall
+using PyPlot
 using XFields
 import XFields: plan, size_in, size_out, eltype_in, eltype_out, Xmap, Xfourier
 import LinearAlgebra: \, *
@@ -136,5 +137,6 @@ end
 # =====================================
 include("grid.jl")
 include("pixels.jl")
+include("plot.jl")
 
 end
