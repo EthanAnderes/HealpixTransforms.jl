@@ -40,7 +40,7 @@ function alm_triangle_plot(
         extent=[0, lmax, lmax, 0],
         origin="upper"
     )
-    ax.set_aspect("auto") 
+    ax.set_aspect("equal") 
 
 
     # img1 = ax.imshow(flm, vmin=vmin, vmax=vmax, origin="upper")
