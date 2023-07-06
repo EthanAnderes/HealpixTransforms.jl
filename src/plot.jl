@@ -9,14 +9,10 @@ function alm_triangle_plot(
     imag_fun = x->abs2.(x),
     title = L"|a_{\ell m}|^2", 
     vmin  = nothing, vmax = nothing,
+    xylabel_fontsize=7,
+    title_fontsize=8, 
+    ticklabel_fontsize=6, 
     ) 
-    # alms_mat; # pass alms_mat = HT.alm2triangle(alms_hpx)
-    # l_ticks, m_ticks,
-    # logs = false, blur = 0, 
-    # vmin=nothing, vmax=nothing, 
-    # title=nothing, 
-    # )
-
     
     hpxℍ0 = fieldtransform(Ifield)
     lmax  = hpxℍ0.lmax
@@ -42,21 +38,16 @@ function alm_triangle_plot(
     )
     ax.set_aspect("equal") 
 
+    ax.set_xlabel(L"azmuthal frequency $m$",fontsize=xylabel_fontsize)
+    ax.set_ylabel(L"\ell",fontsize=xylabel_fontsize)
 
-    # img1 = ax.imshow(flm, vmin=vmin, vmax=vmax, origin="upper")
-    # ax.set_aspect("auto") # , adjustable="box")
-    # ax.set_xlim(minimum(m_ticks), maximum(m_ticks))
-    # ax.set_ylim(maximum(l_ticks), minimum(l_ticks))
-    ax.set_xlabel(L"azmuthal frequency $m$",fontsize=7)
-    ax.set_ylabel(L"\ell",fontsize=7)
+    ax.tick_params(axis="both", labelsize=ticklabel_fontsize)
 
-    ax.tick_params(axis="both", labelsize=6)
-
-    ax.set_title(title, fontsize=8)  
+    ax.set_title(title, fontsize=title_fontsize)  
     fig.tight_layout()
 
     cbar1 = fig.colorbar(img, ax=ax, location="bottom", shrink = 0.5)
-    cbar1.ax.tick_params(labelsize=6)
+    cbar1.ax.tick_params(labelsize=ticklabel_fontsize)
 
     fig.tight_layout()
 
