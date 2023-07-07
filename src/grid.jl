@@ -127,27 +127,29 @@ function triangle2alm(tri_alms::AbstractMatrix{T}) where T
     alms = fill(promote(T(0),NaN32)[2], nlms)
     indx_crr = 1
     for col = 1:mmax+1
-    	x  = tri_alms[:,col]
-    	fx = isfinite.(x)
-    	alms[indx_crr:(indx_crr - 1 + sum(fx))] = x[fx]
-    	indx_crr += sum(fx)
+    	x  = tri_alms[col:end,col]
+    	nx = length(x)
+    	alms[indx_crr:(indx_crr - 1 + nx)] = x
+    	indx_crr += nx
     end
     return alms
 end
 
 
+
 #= test ...
 import HealpixTransforms as HT
+using PyCall
 
 hp   = pyimport("healpy")
 
-Nside = 2048
-lmax  = 3*(Nside)+1
+Nside = 512 # 2048
+lmax  = 3*(Nside)-1
 l     = 0:lmax
 
 l_mmax2, m_mmax2 = let
 	mmax  = 2
-	nlms  = HP.sphtfunc.Alm.getsize(lmax, mmax)
+	nlms  = hp.sphtfunc.Alm.getsize(lmax, mmax)
     ls = zeros(Int, nlms)
     ms = zeros(Int, nlms)
     for i in 1:nlms
@@ -160,7 +162,7 @@ end
 
 l, m = let
 	mmax  = lmax
-	nlms  = HP.sphtfunc.Alm.getsize(lmax, mmax)
+	nlms  = hp.sphtfunc.Alm.getsize(lmax, mmax)
     ls = zeros(Int, nlms)
     ms = zeros(Int, nlms)
     for i in 1:nlms
