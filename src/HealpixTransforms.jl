@@ -124,19 +124,11 @@ spin0(h::Unionℍ{T})  where {T}  = ℍ0{T}(h.nside, lmax=h.lmax, iter=h.iter)
 spin2(h::Unionℍ{T})  where {T}  = ℍ2{T}(h.nside, lmax=h.lmax, iter=h.iter)
 spin02(h::Unionℍ{T}) where {T} = ℍ02{T}(h.nside, lmax=h.lmax, iter=h.iter)
 
-function ∇(alm::Array{Complex{T},1}, h::ℍ0{T}) where {T<:Real}
-    hp  = pyimport("healpy")  
-    ot = hp.alm2map_der1(alm, h.nside, lmax=h.lmax)
-    ax = ot[1,:]
-    ∂θ_ax = ot[2,:]
-    inv_sinθ_∂φ_ax = ot[3,:]
-    return ∂θ_ax, inv_sinθ_∂φ_ax, ax
-end
-
 # Extras
 # =====================================
 include("grid.jl")
 include("pixels.jl")
 include("plot.jl")
+include("extras.jl")
 
 end
