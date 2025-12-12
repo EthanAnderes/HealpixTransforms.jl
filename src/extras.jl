@@ -73,38 +73,38 @@ anafast returns NamedTuple{:TT, :EE, :BB, :TE, :EB, :TB} for input <: Xfield{ℍ
 function anafast end
 
 # spin 0
-function anafast(f::Xfield{<:ℍ0})
+function anafast(f::Xfield{<:ℍ0}; lmax=fieldtransform(f).lmax)
 	hp  = pyimport("healpy")
-	(; TT=hp.anafast(f[:]; pol=false, lmax=fieldtransform(f).lmax))
+	(; TT=hp.anafast(f[:]; pol=false, lmax=lmax))
 end
-function anafast(f::Xfield{<:ℍ0}, g::Xfield{<:ℍ0})
+function anafast(f::Xfield{<:ℍ0}, g::Xfield{<:ℍ0}; lmax=fieldtransform(f).lmax)
 	hp =  pyimport("healpy") 
-	(; TT=hp.anafast((f[:], g[:]); pol=false, lmax=fieldtransform(f).lmax))
+	(; TT=hp.anafast((f[:], g[:]); pol=false, lmax=lmax))
 end
 
 # spin 2
-function anafast(f::Xfield{<:ℍ2})
+function anafast(f::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax)
 	hp   =  pyimport("healpy")
 	qu   = Array.(eachcol(f[:]))
 	tqu  = (zero(qu[1]), qu[1], qu[2]) 
-	ana_out = hp.anafast(tqu; pol=true, lmax=fieldtransform(f).lmax)
+	ana_out = hp.anafast(tqu; pol=true, lmax=lmax)
 	(;EE=ana_out[2,:], BB=ana_out[3,:], EB=ana_out[5,:])
 end
-function anafast(f::Xfield{<:ℍ2}, g::Xfield{<:ℍ2})
+function anafast(f::Xfield{<:ℍ2}, g::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax)
 	hp    =  pyimport("healpy")
 	qu_f  = Array.(eachcol(f[:])) 
 	qu_g  = Array.(eachcol(g[:])) 
 	tqu_f = (zero(qu_f[1]), qu_f[1], qu_f[2]) 
 	tqu_g = (zero(qu_g[1]), qu_g[1], qu_g[2]) 
-	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=fieldtransform(f).lmax)
+	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=lmax)
 	(;EE=ana_out[2,:], BB=ana_out[3,:], EB=ana_out[5,:])
 end
 
 # spin 02
-function anafast(f::Xfield{<:ℍ02})
+function anafast(f::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax)
 	hp   =  pyimport("healpy")
 	tqu  = Array.(eachcol(f[:]))
-	ana_out = hp.anafast(tqu; pol=true, lmax=fieldtransform(f).lmax)
+	ana_out = hp.anafast(tqu; pol=true, lmax=lmax)
 	return (;
 		TT=ana_out[1,:], 
 		EE=ana_out[2,:], 
@@ -114,11 +114,11 @@ function anafast(f::Xfield{<:ℍ02})
 		TB=ana_out[6,:]
 	)
 end
-function anafast(f::Xfield{<:ℍ02}, g::Xfield{<:ℍ02})
+function anafast(f::Xfield{<:ℍ02}, g::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax)
 	hp    =  pyimport("healpy")
 	tqu_f = Array.(eachcol(f[:])) 
 	tqu_g = Array.(eachcol(g[:]))
-	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=fieldtransform(f).lmax) 
+	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=lmax) 
 	return (;
 		TT=ana_out[1,:], 
 		EE=ana_out[2,:], 
