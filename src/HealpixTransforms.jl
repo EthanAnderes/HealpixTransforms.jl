@@ -14,6 +14,10 @@ const UNSEEN = -1.6375e30
 F64 = Float64
 C64 = Complex{Float64}
 
+# Import healpy from PyCall
+# ========================
+
+
 # Transforms ℍ0 and ℍ02 # Can you make spin a type parameter?
 # =========================================
 export ℍ0, ℍ2, ℍ02
@@ -80,41 +84,35 @@ Unionℍ{T} = Union{ℍ0{T}, ℍ2{T}, ℍ02{T}}
 
 # ℍ0
 function *(h::ℍ0{T}, tx::Array{T,1}) where {T<:Real} 
-    hp  = pyimport("healpy") 
-    hp.map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{Complex{T},1}
+    pyimport("healpy").map2alm(tx, lmax=h.lmax, iter=h.iter, pol=false)::Array{Complex{T},1}
 end
 
 function \(h::ℍ0{T}, tlm::Array{Complex{T},1}) where {T<:Real} 
-    hp  = pyimport("healpy")
-    hp.alm2map(tlm, h.nside, lmax=h.lmax, pol=false)::Array{T,1}
+    pyimport("healpy").alm2map(tlm, h.nside, lmax=h.lmax, pol=false)::Array{T,1}
 end
 
 # ℍ2
 
 function *(h::ℍ2{T}, qux::Array{T,2})::Array{Complex{T},2} where {T<:Real} 
-    hp  = pyimport("healpy") 
-    elm, blm = hp.map2alm_spin((qux[:,1], qux[:,2]), 2, lmax=h.lmax)
+    elm, blm = pyimport("healpy").map2alm_spin((qux[:,1], qux[:,2]), 2, lmax=h.lmax)
     hcat(elm, blm)
 end
 
 function \(h::ℍ2{T}, eblm::Array{Complex{T},2})::Array{T,2} where {T<:Real} 
-    hp  = pyimport("healpy")
     mmax = h.lmax
-    qx, ux = hp.sphtfunc.alm2map_spin((eblm[:,1], eblm[:,2]), h.nside, 2, h.lmax, mmax)
+    qx, ux = pyimport("healpy").sphtfunc.alm2map_spin((eblm[:,1], eblm[:,2]), h.nside, 2, h.lmax, mmax)
     hcat(qx, ux)
 end
 
 # ℍ02
 
 function *(h::ℍ02{T}, tqux::Array{T,2}) where {T<:Real} 
-    hp  = pyimport("healpy") 
-	teblm = hp.map2alm(tqux', lmax=h.lmax, iter=h.iter, pol=true)
+	teblm = pyimport("healpy").map2alm(tqux', lmax=h.lmax, iter=h.iter, pol=true)
     Array(transpose(teblm))::Array{Complex{T},2}
 end
 
 function \(h::ℍ02{T}, teblm::Array{Complex{T},2}) where {T<:Real} 
-    hp  = pyimport("healpy")  
-	tqux  = hp.alm2map(transpose(teblm), h.nside, lmax=h.lmax, pol=true)
+	tqux  = pyimport("healpy").alm2map(transpose(teblm), h.nside, lmax=h.lmax, pol=true)
     Array(transpose(tqux))::Array{T,2}
 end
 

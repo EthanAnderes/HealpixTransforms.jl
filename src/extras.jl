@@ -74,37 +74,34 @@ function anafast end
 
 # spin 0
 function anafast(f::Xfield{<:ℍ0}; lmax=fieldtransform(f).lmax)
-	hp  = pyimport("healpy")
-	(; TT=hp.anafast(f[:]; pol=false, lmax=lmax))
+	(; TT=pyimport("healpy").anafast(f[:]; pol=false, lmax=lmax))
 end
 function anafast(f::Xfield{<:ℍ0}, g::Xfield{<:ℍ0}; lmax=fieldtransform(f).lmax)
-	hp =  pyimport("healpy") 
-	(; TT=hp.anafast((f[:], g[:]); pol=false, lmax=lmax))
+	(; TT=pyimport("healpy").anafast((f[:], g[:]); pol=false, lmax=lmax))
 end
 
 # spin 2
-function anafast(f::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax)
-	hp   =  pyimport("healpy")
+function anafast(f::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax, Umult=1)
+	# set Umult to -1 if you want to convert IAU <-> Cosmo pol convention
 	qu   = Array.(eachcol(f[:]))
-	tqu  = (zero(qu[1]), qu[1], qu[2]) 
-	ana_out = hp.anafast(tqu; pol=true, lmax=lmax)
+	tqu  = (zero(qu[1]), qu[1], Umult * qu[2]) 
+	ana_out = pyimport("healpy").anafast(tqu; pol=true, lmax=lmax)
 	(;EE=ana_out[2,:], BB=ana_out[3,:], EB=ana_out[5,:])
 end
-function anafast(f::Xfield{<:ℍ2}, g::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax)
-	hp    =  pyimport("healpy")
+function anafast(f::Xfield{<:ℍ2}, g::Xfield{<:ℍ2}; lmax=fieldtransform(f).lmax, Umult=1)
 	qu_f  = Array.(eachcol(f[:])) 
 	qu_g  = Array.(eachcol(g[:])) 
-	tqu_f = (zero(qu_f[1]), qu_f[1], qu_f[2]) 
-	tqu_g = (zero(qu_g[1]), qu_g[1], qu_g[2]) 
-	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=lmax)
+	tqu_f = (zero(qu_f[1]), qu_f[1], Umult * qu_f[2]) 
+	tqu_g = (zero(qu_g[1]), qu_g[1], Umult * qu_g[2]) 
+	ana_out = pyimport("healpy").anafast(tqu_f, tqu_g; pol=true, lmax=lmax)
 	(;EE=ana_out[2,:], BB=ana_out[3,:], EB=ana_out[5,:])
 end
 
 # spin 02
-function anafast(f::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax)
-	hp   =  pyimport("healpy")
+function anafast(f::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax, Umult=1)
 	tqu  = Array.(eachcol(f[:]))
-	ana_out = hp.anafast(tqu; pol=true, lmax=lmax)
+	tqu[3] *= Umult
+	ana_out = pyimport("healpy").anafast(tqu; pol=true, lmax=lmax)
 	return (;
 		TT=ana_out[1,:], 
 		EE=ana_out[2,:], 
@@ -114,11 +111,12 @@ function anafast(f::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax)
 		TB=ana_out[6,:]
 	)
 end
-function anafast(f::Xfield{<:ℍ02}, g::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax)
-	hp    =  pyimport("healpy")
+function anafast(f::Xfield{<:ℍ02}, g::Xfield{<:ℍ02}; lmax=fieldtransform(f).lmax, Umult=1)
 	tqu_f = Array.(eachcol(f[:])) 
 	tqu_g = Array.(eachcol(g[:]))
-	ana_out = hp.anafast(tqu_f, tqu_g; pol=true, lmax=lmax) 
+	tqu_f[3] *= Umult
+	tqu_g[3] *= Umult
+	ana_out = pyimport("healpy").anafast(tqu_f, tqu_g; pol=true, lmax=lmax) 
 	return (;
 		TT=ana_out[1,:], 
 		EE=ana_out[2,:], 
@@ -145,8 +143,7 @@ end
 # =====================================
 
 function ∇(alm::Array{Complex{T},1}, h::ℍ0{T}) where {T<:Real}
-    hp  = pyimport("healpy")  
-    ot = hp.alm2map_der1(alm, h.nside, lmax=h.lmax)
+    ot = pyimport("healpy").alm2map_der1(alm, h.nside, lmax=h.lmax)
     ax = ot[1,:]
     ∂θ_ax = ot[2,:]
     inv_sinθ_∂φ_ax = ot[3,:]

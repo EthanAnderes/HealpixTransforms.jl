@@ -46,8 +46,7 @@ using HealpixTransforms: θ_φ_idx_4_rings, n_pix
 using PyCall
 
 function pix_test(nside::Int)
-	hp  = pyimport("healpy") 
-	θ, φ  = hp.pix2ang(nside, 0:(n_pix(nside)-1))
+	θ, φ  = pyimport("healpy").pix2ang"(nside, 0:(n_pix(nside)-1))
 	return θ, φ
 end
 
@@ -67,15 +66,13 @@ Nside = 2048
 index2lm(i, h::Unionℍ) = index2lm(i, h.lmax)
 
 function index2lm(i, lmax)
-	hp  = pyimport("healpy") 
-	hp.Alm.getlm(lmax, i - 1)
+	pyimport("healpy").Alm.getlm(lmax, i - 1)
 end
 
 lm2index(l, m, h::Unionℍ) = lm2index(l, m, h.lmax)
 
 function lm2index(l, m, lmax)
-	hp  = pyimport("healpy")
-	hp.Alm.getidx(lmax, l, m) .+ 1
+	pyimport("healpy").Alm.getidx(lmax, l, m) .+ 1
 end
 
 lm(h::Unionℍ) = lm(h.lmax)
@@ -104,8 +101,7 @@ ms_mat = HT.alm2triangle(ms)
 ```
 """
 function alm2triangle(alms::AbstractVector{T}) where T
-	hp  = pyimport("healpy")
-    lmax         = hp.sphtfunc.Alm.getlmax(length(alms))
+    lmax         = pyimport("healpy").sphtfunc.Alm.getlmax(length(alms))
     alms_mat     = fill(promote(T(0),NaN32)[2], lmax+1, lmax+1)
     start_ℓindex = end_ℓindex = 0
     for i = 1:lmax+1
@@ -120,10 +116,9 @@ end
 # Note: to reduce mmax, just cut the end columns of the output of 
 # alm2triangle.
 function triangle2alm(tri_alms::AbstractMatrix{T}) where T
-	hp   = pyimport("healpy")
 	lmax = size(tri_alms,1)-1
 	mmax = size(tri_alms,2)-1
-	nlms = hp.sphtfunc.Alm.getsize(lmax, mmax)
+	nlms = pyimport("healpy").sphtfunc.Alm.getsize(lmax, mmax)
     alms = fill(promote(T(0),NaN32)[2], nlms)
     indx_crr = 1
     for col = 1:mmax+1
@@ -141,7 +136,6 @@ end
 import HealpixTransforms as HT
 using PyCall
 
-hp   = pyimport("healpy")
 
 Nside = 512 # 2048
 lmax  = 3*(Nside)-1
@@ -149,11 +143,11 @@ l     = 0:lmax
 
 l_mmax2, m_mmax2 = let
 	mmax  = 2
-	nlms  = hp.sphtfunc.Alm.getsize(lmax, mmax)
+	nlms  = pyimport("healpy").sphtfunc.Alm.getsize(lmax, mmax)
     ls = zeros(Int, nlms)
     ms = zeros(Int, nlms)
     for i in 1:nlms
-        l4i, m4i = hp.sphtfunc.Alm.getlm(lmax, i-1)
+        l4i, m4i = pyimport("healpy").sphtfunc.Alm.getlm(lmax, i-1)
         ls[i] = l4i
         ms[i] = m4i
     end
@@ -162,11 +156,11 @@ end
 
 l, m = let
 	mmax  = lmax
-	nlms  = hp.sphtfunc.Alm.getsize(lmax, mmax)
+	nlms  = pyimport("healpy").sphtfunc.Alm.getsize(lmax, mmax)
     ls = zeros(Int, nlms)
     ms = zeros(Int, nlms)
     for i in 1:nlms
-        l4i, m4i = hp.sphtfunc.Alm.getlm(lmax, i-1)
+        l4i, m4i = pyimport("healpy").sphtfunc.Alm.getlm(lmax, i-1)
         ls[i] = l4i
         ms[i] = m4i
     end
@@ -466,8 +460,7 @@ for fun ∈ (:mollview, :cartview, :azeqview)
 				xsize=1000,
 				title="title"
 			)
-			hp  = pyimport("healpy") 
-			hp.visufunc.$fun(
+			pyimport("healpy").visufunc.$fun(
 				hpmap, sub=sub, 
 				min=vmin, max=vmax,
 				return_projected_map=return_projected_map,
@@ -483,15 +476,13 @@ end
 # -------------------------------------------------------------- 
 # z == right hand rotation about vector θ==0 
 # y == right hand rotation about vector (θ,φ) = (π/2,3π/4)
-function rotate_map_ZYZ(hp_map, z1::Real, y2::Real, z3::Real)
-	hp  = pyimport("healpy") 
-	rot = hp.rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
+function rotate_map_ZYZ(hp_map, z1::Real, y2::Real, z3::Real) 
+	rot = pyimport("healpy").rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
 	rot.rotate_map_pixel(hp_map)
 end
 
-function rotate_alm_ZYZ(hp_alm, z1::Real, y2::Real, z3::Real)
-	hp  = pyimport("healpy") 
-	rot = hp.rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
+function rotate_alm_ZYZ(hp_alm, z1::Real, y2::Real, z3::Real) 
+	rot = pyimport("healpy").rotator.Rotator(rot=(z1, y2, z3), eulertype="Y", deg=false)
 	rot.rotate_map_alms(hp_map)
 end
 
@@ -499,16 +490,16 @@ end
 # fits reader: TODO
 # -------------------------------------------------------------- 
 
-# cmbTQU_prerot  = hp.read_map(cmb_file, verbose=false, field= (0,1,2));
+# cmbTQU_prerot  = pyimport("healpy").read_map(cmb_file, verbose=false, field= (0,1,2));
 
 # const one_K_in_mK = 1e+6
-# nside = 512  |> hp.nside2npix |> hp.pixelfunc.get_min_valid_nside 
+# nside = 512  |> pyimport("healpy").nside2npix" |> pyimport("healpy").pixelfunc.get_min_valid_nside" 
 # cmb_file  = "HealpixHelper/downloads/cmbs4_06b_llcdm_f095_b23_ellmin30_map_0512_mc_0000.fits"
 # eulertype = "Y" # Z rotation, then Y, then Z 
 # deg   = false
 # Zrot, Yrot, Xrot = deg2rad.((40, -50, -40)) # clockwise rotation
-# rot = hp.rotator.Rotator(rot=(Zrot, Yrot, Xrot), eulertype=eulertype, deg=deg)
-# cmbTQU_prerot  = hp.read_map(cmb_file, verbose=false, field= (0,1,2));
+# rot = pyimport("healpy").rotator.Rotator"(rot=(Zrot, Yrot, Xrot), eulertype=eulertype, deg=deg)
+# cmbTQU_prerot  = HP.read_map(cmb_file, verbose=false, field= (0,1,2));
 # obsp_prerot  = .!(UNSEEN .== cmbTQU_prerot[1,:])
 # obsp   = rot.rotate_map_pixel(obsp_prerot);
 # cmbTQU   = rot.rotate_map_alms(cmbTQU_prerot) .* one_K_in_mK
