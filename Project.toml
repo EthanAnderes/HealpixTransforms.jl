@@ -11,6 +11,7 @@ PyPlot = "d330b81b-6aea-500a-939a-2ce795aea3ee"
 XFields = "6b266097-e72c-4055-8154-82a0a0b3a8e0"
 
 [compat]
+FFTW = "1"
 julia = "1.8"
 
 [extras]
